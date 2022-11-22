@@ -12,6 +12,7 @@ down_node_index = 0
 def main():
     print("INFO: in main")
     #ylvas kommentar
+    
     parser = argparse.ArgumentParser(description='Run an EPANET simulation.')
     parser.add_argument('input_filename', help='An EPANET input file describing the system.')
     parser.add_argument('report_filename', nargs='?', default='', help='Report log file from the simulation run.')
