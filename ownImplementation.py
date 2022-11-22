@@ -37,10 +37,10 @@ def main():
 
     #initialize subsys
     args = parser.parse_args()
-
-    #unpack args and initialize water distribution 
     global pipe_index 
     pipe_index = args.pipe
+
+    #unpack args and initialize water distribution 
     initialize_subsys(args)
 
     add_leak() #replaces a pipe with a leakage suite
