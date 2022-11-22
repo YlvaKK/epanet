@@ -10,17 +10,19 @@ up_node_index = 0
 down_node_index = 0
 
 def main():
+    #TODO: replace all info printouts with logger
     print("INFO: in main")
-    #ylvas kommentar
-    
+
+    #parses all arguments
     parser = argparse.ArgumentParser(description='Run an EPANET simulation.')
     parser.add_argument('input_filename', help='An EPANET input file describing the system.')
     parser.add_argument('report_filename', nargs='?', default='', help='Report log file from the simulation run.')
     parser.add_argument('binary_filename', nargs='?', default='', help='Hydraulic analysis results file (binary).')
     parser.add_argument('--hstep', metavar='seconds', type=int, default=3600, help='Hydraulic time step (default 3600s=1h).')
     parser.add_argument('--pipe', metavar='index', type=int, default=2, help='index of pipe to look at (default 2).')
-
     args = parser.parse_args()
+
+
     epanet_subsys_init(args)
 
 def epanet_subsys_init(args):
