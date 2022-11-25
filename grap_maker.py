@@ -64,14 +64,14 @@ def make_plots():
 
     pyplot.scatter(x, upstream_pressure_deviation_from_mean, s=2, c='xkcd:puke green')
     pyplot.scatter(x, downstream_pressure_deviation_from_mean, s=2, c='xkcd:orange')
-    pyplot.xlabel('leakage position (unit)')
-    pyplot.ylabel('pressure (unit), derivation from mean')
+    pyplot.xlabel('leakage position from start (feet)')
+    pyplot.ylabel('pressure (psi), derivation from mean')
     pyplot.legend(['upsteam node', 'downstream node'])
     pyplot.show()
 
     pyplot.scatter(x, flow_differential, s=2, c='xkcd:puke green')
-    pyplot.xlabel('leakage position (unit)')
-    pyplot.ylabel('difference in flow before/after leak (unit)')
+    pyplot.xlabel('leakage position (feet)')
+    pyplot.ylabel('difference in flow before/after leak (gpm)')
     pyplot.show()
 
 
