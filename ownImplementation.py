@@ -20,6 +20,8 @@ downstream_node_pressure = []
 upstream_pipe_flow = []
 downstream_pipe_flow = []
 
+#TODO: hantera enheter! olika inp-filer kan ha olika enheter!!!!!!!
+
 def main():
     print("INFO: in main")
     #parse all arguments
@@ -52,7 +54,31 @@ def initialize_subsys(args):
     epanet_toolkit.open(ph, args.input_filename, args.report_filename, args.binary_filename)
     epanet_toolkit.settimeparam(ph, epanet_toolkit.HYDSTEP, args.hstep)
     epanet_toolkit.setstatusreport(ph, epanet_toolkit.NORMAL_REPORT)
+    #getUnits()
 
+def getUnits():
+    # doesn't work because getflowunits returns an int???
+    global flow_unit
+    global pressure_unit
+    global length_unit
+    global pipe_diameter_unit
+    global roughness_unit
+
+    units = epanet_toolkit.getflowunits(ph)
+    flow_unit = str(units)
+
+    if units == epanet_toolkit.CFS or units == epanet_toolkit.CFS or units == epanet_toolkit.MGD or units == epanet_toolkit.IMGD or units == epanet_toolkit.AFD:
+        pressure_unit = "psi"
+        length_unit = "foot"
+        pipe_diameter_unit = "inch"
+        roughness_unit = "Darcy-Weisbach / 10^(-3)foot"
+    elif units == epanet_toolkit.LPS or units == epanet_toolkit.LPM or units == epanet_toolkit.MLD or units == epanet_toolkit.CMH or units == epanet_toolkit.CMD:
+        pressure_unit = "meter" #ACCORDING TO EPANET DOCUMENTATION! I KNOW THIS IS RIDICULOUS
+        length_unit = "meter"
+        pipe_diameter_unit = "millimeter"
+        roughness_unit = "Darcy-Weisbach / millimeter"
+    else:
+        raise Exception("system does not have units?? flow unit is %s" %units)
 
 def add_leak():
     global leakage_node_index
