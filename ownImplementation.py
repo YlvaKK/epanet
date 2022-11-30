@@ -15,6 +15,8 @@ PIPE_DIAM = 100
 PIPE_ROUGHNESS = 120
 PIPE_MLOSS = 0
 
+FLOW_UNITS = ['cfs', 'gpm', 'mgd', 'imgd', 'afd', 'lps', 'lpm', 'mld', 'cmh', 'cmd']
+
 upstream_node_pressure = []
 downstream_node_pressure = []
 upstream_pipe_flow = []
@@ -54,7 +56,7 @@ def initialize_subsys(args):
     epanet_toolkit.open(ph, args.input_filename, args.report_filename, args.binary_filename)
     epanet_toolkit.settimeparam(ph, epanet_toolkit.HYDSTEP, args.hstep)
     epanet_toolkit.setstatusreport(ph, epanet_toolkit.NORMAL_REPORT)
-    #getUnits()
+    getUnits()
 
 def getUnits():
     # doesn't work because getflowunits returns an int???
@@ -63,22 +65,26 @@ def getUnits():
     global length_unit
     global pipe_diameter_unit
     global roughness_unit
+    global is_metric
 
     units = epanet_toolkit.getflowunits(ph)
-    flow_unit = str(units)
+    flow_unit = FLOW_UNITS[units]
 
-    if units == epanet_toolkit.CFS or units == epanet_toolkit.CFS or units == epanet_toolkit.MGD or units == epanet_toolkit.IMGD or units == epanet_toolkit.AFD:
+    if units == epanet_toolkit.CFS or units == epanet_toolkit.GPM or units == epanet_toolkit.MGD or units == epanet_toolkit.IMGD or units == epanet_toolkit.AFD:
+        is_metric = False
         pressure_unit = "psi"
         length_unit = "foot"
         pipe_diameter_unit = "inch"
         roughness_unit = "Darcy-Weisbach / 10^(-3)foot"
     elif units == epanet_toolkit.LPS or units == epanet_toolkit.LPM or units == epanet_toolkit.MLD or units == epanet_toolkit.CMH or units == epanet_toolkit.CMD:
+        is_metric = True
         pressure_unit = "meter" #ACCORDING TO EPANET DOCUMENTATION! I KNOW THIS IS RIDICULOUS
         length_unit = "meter"
         pipe_diameter_unit = "millimeter"
         roughness_unit = "Darcy-Weisbach / millimeter"
     else:
         raise Exception("system does not have units?? flow unit is %s" %units)
+
 
 def add_leak():
     global leakage_node_index
@@ -134,7 +140,7 @@ def run_hydraulic_solver():
 
 def write_to_csv():
     with open(output_file, 'w', newline='') as csvfile:
-        fieldnames = ['leakage_position', 'upstream_pressure', 'downstream_pressure', 'upstream_flow', 'downstream_flow']
+        fieldnames = ['leakage_position (%s)' %length_unit, 'upstream_pressure (%s)' %pressure_unit, 'downstream_pressure (%s)' %pressure_unit, 'upstream_flow (%s)' %flow_unit, 'downstream_flow (%s)' %flow_unit]
         writer = csv.DictWriter(csvfile, delimiter = ',', fieldnames=fieldnames)
         writer.writeheader()
 
