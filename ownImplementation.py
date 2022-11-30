@@ -9,8 +9,8 @@ LEAK = "leakage_node"
 UPSTREAM_PIPE = "upstream_pipe"
 DOWNATREAM_PIPE = "downstream_pipe"
 LEAK_COEFF = 0.1
-LENGTH_STEP = 100
-PIPE_LENGTH = 1000
+#LENGTH_STEP = 100
+#PIPE_LENGTH = 1000
 PIPE_DIAM = 100
 PIPE_ROUGHNESS = 120
 PIPE_MLOSS = 0
@@ -59,7 +59,6 @@ def initialize_subsys(args):
     getUnits()
 
 def getUnits():
-    # doesn't work because getflowunits returns an int???
     global flow_unit
     global pressure_unit
     global length_unit
@@ -78,7 +77,7 @@ def getUnits():
         roughness_unit = "Darcy-Weisbach / 10^(-3)foot"
     elif units == epanet_toolkit.LPS or units == epanet_toolkit.LPM or units == epanet_toolkit.MLD or units == epanet_toolkit.CMH or units == epanet_toolkit.CMD:
         is_metric = True
-        pressure_unit = "meter" #ACCORDING TO EPANET DOCUMENTATION! I KNOW THIS IS RIDICULOUS
+        pressure_unit = "meter" #ACCORDING TO EPANET DOCUMENTATION! I KNOW THIS IS NOT A REAL PRESSURE UNIT
         length_unit = "meter"
         pipe_diameter_unit = "millimeter"
         roughness_unit = "Darcy-Weisbach / millimeter"
@@ -87,11 +86,14 @@ def getUnits():
 
 
 def add_leak():
+    global pipe_length
     global leakage_node_index
     global upstream_node_index
     global downstream_node_index
     global upstream_pipe_index
     global downstream_pipe_index
+
+    pipe_length = epanet_toolkit.getlinkvalue(ph, pipe_index, epanet_toolkit.LENGTH)
 
     #get index of nodes surrounding original pipe
     upstream_node_index, downstream_node_index = epanet_toolkit.getlinknodes(ph, pipe_index)
@@ -109,18 +111,20 @@ def add_leak():
     upstream_pipe_index = make_pipe(UPSTREAM_PIPE, upstream_node_id, LEAK)
     downstream_pipe_index = make_pipe(DOWNATREAM_PIPE, LEAK, downstream_node_id)
 
+    print("length: %s" %pipe_length)
+
 
 def make_pipe(id, node1, node2):
     pipe_index = epanet_toolkit.addlink(ph, id, epanet_toolkit.PIPE, node1, node2)
-    epanet_toolkit.setpipedata(ph, pipe_index, length= PIPE_LENGTH/2, diam = PIPE_DIAM, rough = PIPE_ROUGHNESS, mloss = PIPE_MLOSS)
+    epanet_toolkit.setpipedata(ph, pipe_index, length = 1, diam = PIPE_DIAM, rough = PIPE_ROUGHNESS, mloss = PIPE_MLOSS)
     return pipe_index
 
 
 def move_leak():
-    for i in range(1,1000):
+    for i in range(1, round(pipe_length)):
         # change length of pipes surrounding leak
         epanet_toolkit.setpipedata(ph, upstream_pipe_index, length = i, diam=PIPE_DIAM, rough=PIPE_ROUGHNESS, mloss=PIPE_MLOSS)
-        epanet_toolkit.setpipedata(ph, downstream_pipe_index, length = PIPE_LENGTH-i, diam=PIPE_DIAM, rough=PIPE_ROUGHNESS, mloss=PIPE_MLOSS)
+        epanet_toolkit.setpipedata(ph, downstream_pipe_index, length = round(pipe_length)-i, diam=PIPE_DIAM, rough=PIPE_ROUGHNESS, mloss=PIPE_MLOSS)
         
         #run simulation
         run_hydraulic_solver()
@@ -144,7 +148,7 @@ def write_to_csv():
         writer = csv.DictWriter(csvfile, delimiter = ',', fieldnames=fieldnames)
         writer.writeheader()
 
-        for i in range(999):
+        for i in range(round(pipe_length) - 1):
             writer.writerow(
                 {fieldnames[0]: i, 
                 fieldnames[1]: upstream_node_pressure[i], 
