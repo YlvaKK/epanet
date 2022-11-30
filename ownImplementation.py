@@ -3,6 +3,7 @@ import argparse
 from epanet import toolkit as epanet_toolkit
 import dcritsim
 import csv
+import math
 
 output_file='training_data.csv'
 LEAK = "leakage_node"
@@ -48,8 +49,8 @@ def main():
     initialize_subsys(args)
 
     add_leak() #replaces a pipe with a leakage suite
-    move_leak() #moves leak along pipe and records pressure and flow
-    write_to_csv() #outputs data to csv file
+    #move_leak() #moves leak along pipe and records pressure and flow
+    #write_to_csv() #outputs data to csv file
 
 
 def initialize_subsys(args):
@@ -87,18 +88,28 @@ def getUnits():
 
 def add_leak():
     global pipe_length
+
+    global upstream_node_elevation
+    global downstream_node_elevation
+    global upper_angle
+
     global leakage_node_index
     global upstream_node_index
     global downstream_node_index
     global upstream_pipe_index
     global downstream_pipe_index
 
-    pipe_length = epanet_toolkit.getlinkvalue(ph, pipe_index, epanet_toolkit.LENGTH)
-
     #get index of nodes surrounding original pipe
     upstream_node_index, downstream_node_index = epanet_toolkit.getlinknodes(ph, pipe_index)
     upstream_node_id = epanet_toolkit.getnodeid(ph, upstream_node_index)
     downstream_node_id = epanet_toolkit.getnodeid(ph, downstream_node_index)
+
+    #save useful global variables
+    pipe_length = epanet_toolkit.getlinkvalue(ph, pipe_index, epanet_toolkit.LENGTH)
+    upstream_node_elevation = epanet_toolkit.getnodevalue(ph, upstream_node_index, epanet_toolkit.ELEVATION)
+    downstream_node_elevation = epanet_toolkit.getnodevalue(ph, downstream_node_index, epanet_toolkit.ELEVATION)
+    
+    upper_angle = get_pipe_angle()
 
     #remove original pipe
     epanet_toolkit.deletelink(ph, pipe_index, actionCode = epanet_toolkit.UNCONDITIONAL)
@@ -111,12 +122,11 @@ def add_leak():
     upstream_pipe_index = make_pipe(UPSTREAM_PIPE, upstream_node_id, LEAK)
     downstream_pipe_index = make_pipe(DOWNATREAM_PIPE, LEAK, downstream_node_id)
 
-    print("length: %s" %pipe_length)
-
 
 def make_pipe(id, node1, node2):
     pipe_index = epanet_toolkit.addlink(ph, id, epanet_toolkit.PIPE, node1, node2)
     epanet_toolkit.setpipedata(ph, pipe_index, length = 1, diam = PIPE_DIAM, rough = PIPE_ROUGHNESS, mloss = PIPE_MLOSS)
+
     return pipe_index
 
 
@@ -125,7 +135,11 @@ def move_leak():
         # change length of pipes surrounding leak
         epanet_toolkit.setpipedata(ph, upstream_pipe_index, length = i, diam=PIPE_DIAM, rough=PIPE_ROUGHNESS, mloss=PIPE_MLOSS)
         epanet_toolkit.setpipedata(ph, downstream_pipe_index, length = round(pipe_length)-i, diam=PIPE_DIAM, rough=PIPE_ROUGHNESS, mloss=PIPE_MLOSS)
-        
+
+        leak_elevation = calculate_leak_elevation(upstream_node_elevation, upper_angle, i)
+        epanet_toolkit.setnodevalue(ph, leakage_node_index, epanet_toolkit.ELEVATION, leak_elevation)
+        print("leak elev: %s" %leak_elevation)
+
         #run simulation
         run_hydraulic_solver()
         
@@ -135,6 +149,21 @@ def move_leak():
         upstream_pipe_flow.append(epanet_toolkit.getlinkvalue(ph, upstream_pipe_index, property=epanet_toolkit.FLOW))
         downstream_pipe_flow.append(epanet_toolkit.getlinkvalue(ph, downstream_pipe_index, property=epanet_toolkit.FLOW))
 
+def get_pipe_angle():
+    #assume upstream has higher elevation for now
+    total_elevation_diff = upstream_node_elevation - downstream_node_elevation
+    ground_diff = math.sqrt(math.pow(pipe_length, 2) - math.pow(total_elevation_diff, 2))
+
+    upper_angle = math.asin(ground_diff / pipe_length)
+
+    print("elev_diff: %s, upper_angle: %s" %(total_elevation_diff, upper_angle))
+    return upper_angle
+
+def calculate_leak_elevation(upper_elevation, upper_angle, length_from_top):
+    height_diff = length_from_top * upper_angle
+    print("elevation diff from top to leak: %s, elevation of leak: %s" %(height_diff, upper_elevation - height_diff))
+    return upper_elevation - height_diff
+    
 
 def run_hydraulic_solver():
     epanet_toolkit.openH(ph)
