@@ -21,6 +21,7 @@ upstream_node_pressure = []
 downstream_node_pressure = []
 upstream_pipe_flow = []
 downstream_pipe_flow = []
+leak_elevation_value = []
 
 #TODO: hantera enheter! olika inp-filer kan ha olika enheter!!!!!!!
 
@@ -70,7 +71,6 @@ def add_leak():
     global downstream_node_elevation
 
     global angle
-    global upper_elevation
 
     global leakage_node_index
     global upstream_node_index
@@ -84,7 +84,7 @@ def add_leak():
     #save useful global variables
     pipe_length = epanet_toolkit.getlinkvalue(ph, pipe_index, epanet_toolkit.LENGTH)
     
-    angle, upper_elevation = get_pipe_angle(upstream_node_index, downstream_node_index)
+    angle, upstream_node_elevation = get_pipe_angle(upstream_node_index, downstream_node_index)
     
     #remove original pipe
     epanet_toolkit.deletelink(ph, pipe_index, actionCode = epanet_toolkit.UNCONDITIONAL)
@@ -113,19 +113,15 @@ def move_leak(leak_coefficient):
     this_downsteam_p = []
     this_upstream_f = []
     this_downstream_f = []
+    this_leak_e = []
     for i in range(1, round(pipe_length)):
         # change length of pipes surrounding leak
         epanet_toolkit.setpipedata(ph, upstream_pipe_index, length = i, diam=PIPE_DIAM, rough=PIPE_ROUGHNESS, mloss=PIPE_MLOSS)
         epanet_toolkit.setpipedata(ph, downstream_pipe_index, length = round(pipe_length)-i, diam=PIPE_DIAM, rough=PIPE_ROUGHNESS, mloss=PIPE_MLOSS)
 
-        if (waterRunsUphill):
-            distance_from_top = round(pipe_length) - i
-        else:
-            distance_from_top = i
+        leak_elevation = calculate_leak_elevation(upstream_node_elevation, angle, i)
 
-        #leak_elevation = calculate_leak_elevation(upper_elevation, angle, distance_from_top)
-
-        #epanet_toolkit.setnodevalue(ph, leakage_node_index, epanet_toolkit.ELEVATION, leak_elevation)
+        epanet_toolkit.setnodevalue(ph, leakage_node_index, epanet_toolkit.ELEVATION, leak_elevation)
         epanet_toolkit.setnodevalue(ph, leakage_node_index, epanet_toolkit.EMITTER, leak_coefficient)
 
         #run simulation
@@ -136,17 +132,21 @@ def move_leak(leak_coefficient):
         this_downsteam_p.append(epanet_toolkit.getnodevalue(ph, downstream_node_index, property=epanet_toolkit.PRESSURE))
         this_upstream_f.append(epanet_toolkit.getlinkvalue(ph, upstream_pipe_index, property=epanet_toolkit.FLOW))
         this_downstream_f.append(epanet_toolkit.getlinkvalue(ph, downstream_pipe_index, property=epanet_toolkit.FLOW))
+        this_leak_e.append(leak_elevation)
+        #this_leak_e.append(epanet_toolkit.getnodevalue(ph, leakage_node_index, property=epanet_toolkit.ELEVATION))
     
     upstream_node_pressure.append(this_upsteam_p)
     downstream_node_pressure.append(this_downsteam_p)
     upstream_pipe_flow.append(this_upstream_f)
     downstream_pipe_flow.append(this_downstream_f)
+    leak_elevation_value.append(this_leak_e)
 
 def get_pipe_angle(upstream_index, downstream_index):
-    upper_elevation, elevation_diff = find_upper_node(upstream_index, downstream_index)
-    
+    upstream_node_elevation = epanet_toolkit.getnodevalue(ph, upstream_index, epanet_toolkit.ELEVATION)
+    downstream_node_elevation = epanet_toolkit.getnodevalue(ph, downstream_index, epanet_toolkit.ELEVATION)
+    elevation_diff = upstream_node_elevation - downstream_node_elevation
     angle = math.asin(elevation_diff/pipe_length)
-    return angle, upper_elevation
+    return angle, upstream_node_elevation
 
 def find_upper_node(upstream_index, downstream_index):
     upstream_node_elevation = epanet_toolkit.getnodevalue(ph, upstream_index, epanet_toolkit.ELEVATION)
@@ -185,11 +185,11 @@ def write_to_csv(iterations):
             if (i == 0):
                 header2 = header2 + 'leakage_position (foot),'
             header1 = header1 + 'leak_coeff: %s,,,,,' %(LEAK_COEFF*(i+1))
-            header2 = header2 + 'upstream_pressure (psi),downstream_pressure (psi),upstream_flow (gpm),downstream_flow (gpm),'
+            header2 = header2 + 'upstream_pressure (psi),downstream_pressure (psi),upstream_flow (gpm),downstream_flow (gpm),leak_elev (feet),'
             for j in range(round(pipe_length) - 1):
                 if (i == 0):
                     lines[j] = "%s," %j
-                lines[j] = lines[j] + "%s,%s,%s,%s," %(upstream_node_pressure[i][j], downstream_node_pressure[i][j], upstream_pipe_flow[i][j], downstream_pipe_flow[i][j])
+                lines[j] = lines[j] + "%s,%s,%s,%s,%s," %(upstream_node_pressure[i][j], downstream_node_pressure[i][j], upstream_pipe_flow[i][j], downstream_pipe_flow[i][j], leak_elevation_value[i][j])
 
         header1 = header1[0:len(header1) - 1] + "\n"
         header2 = header2[0:len(header2) - 1] + "\n"
