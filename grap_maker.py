@@ -35,13 +35,16 @@ def read_csv():
         
     global length
     length = len(list)
+    print("length=%s" %length)
 
     global upstream_total
     global downstream_total
     upstream_total = 0
     downstream_total = 0
 
-    for i in range(1,length):
+    for i in range(2,length):
+        #print("i=%s" %i)
+        print(list[i])
         upstream_pressure.append(float(list[i][1]))
         downstream_pressure.append(float(list[i][2]))
         upstream_flow.append(float(list[i][3]))
@@ -51,16 +54,16 @@ def read_csv():
         downstream_total = downstream_total + float(list[i][2])
 
 def derive_calculations():
-    upstream_mean = upstream_total/(length - 1)
-    downstream_mean = downstream_total/(length - 1)
+    upstream_mean = upstream_total/(length - 2)
+    downstream_mean = downstream_total/(length - 2)
 
-    for i in range(length - 1):
+    for i in range(length - 2):
         upstream_pressure_deviation_from_mean.append(abs(upstream_mean - upstream_pressure[i]))
         downstream_pressure_deviation_from_mean.append(abs(downstream_mean - downstream_pressure[i]))
         flow_differential.append(upstream_flow[i] - downstream_flow[i])
 
 def make_plots():
-    x = range(1, length)
+    x = range(1, length - 1)
 
     pyplot.scatter(x, upstream_pressure_deviation_from_mean, s=2, c='xkcd:puke green')
     pyplot.scatter(x, downstream_pressure_deviation_from_mean, s=2, c='xkcd:orange')
