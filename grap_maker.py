@@ -43,7 +43,6 @@ def read_csv():
     downstream_total = 0
 
     for i in range(2,length):
-        #print("i=%s" %i)
         print(list[i])
         upstream_pressure.append(float(list[i][1]))
         downstream_pressure.append(float(list[i][2]))
@@ -64,6 +63,13 @@ def derive_calculations():
 
 def make_plots():
     x = range(1, length - 1)
+
+    pyplot.scatter(x, upstream_pressure, s=2, c='xkcd:puke green')
+    pyplot.scatter(x, downstream_pressure, s=2, c='xkcd:orange')
+    pyplot.xlabel('leakage distance from start of pipe (feet)')
+    pyplot.ylabel('pressure (psi)')
+    pyplot.legend(['pressure in upsteam node', 'pressure in downstream node'])
+    pyplot.show()
 
     pyplot.scatter(x, upstream_pressure_deviation_from_mean, s=2, c='xkcd:puke green')
     pyplot.scatter(x, downstream_pressure_deviation_from_mean, s=2, c='xkcd:orange')
