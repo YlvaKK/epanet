@@ -15,7 +15,7 @@ def main():
 
     project.add_leak()
     results = project.move_leak_along_transect(leak_base=LEAK_COEFF, iterations=args.iter)
-    project.close_hydraulic_solver()
+    #project.close_hydraulic_solver()
     write_to_csv(results)
 
 
@@ -35,7 +35,7 @@ def write_to_csv(results):
     writer.close()
 
 def get_project():
-    #These CANNOT be lumped together in one line fpr some reason. Don't do it, it messes up everything.
+    #These CANNOT be lumped together in one line for some reason. Don't do it, it messes up everything.
     epanet = dcritsim.epanetwrap.DcritEPANET()
     ph = epanet.get_ph()
     return epanet_actions.ProjectActions(ph)
