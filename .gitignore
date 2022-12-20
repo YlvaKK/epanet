@@ -3,4 +3,6 @@ dcritsim-runs/*
 epanet-python/*
 .DS_Store
 old_version/*
-__pychache__/*
+__pycache__/*
+.idea/*
+graphs/*

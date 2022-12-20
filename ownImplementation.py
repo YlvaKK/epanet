@@ -63,8 +63,6 @@ def check_units():
     global l_unit
 
     flow_units = epanet_toolkit.getflowunits(ph)
-    if (flow_units != epanet_toolkit.GPM):
-        raise Exception("input file must use GPM as flow unit")
     if (flow_units >= 0 and flow_units < 5):
         epanet_toolkit.setflowunits(ph, epanet_toolkit.GPM)
         f_unit, p_unit, l_unit = 'gpm', 'psi', 'foot'
