@@ -4,7 +4,7 @@ from epanet import toolkit as epanet_toolkit
 import dcritsim
 import math
 
-output_file='training_data.csv'
+output_file= 'graphs/training_data_2leaks_1step.csv'
 LEAK = "leakage_node"
 UPSTREAM_PIPE = "upstream_pipe"
 DOWNSTREAM_PIPE = "downstream_pipe"
@@ -148,7 +148,7 @@ def move_leak(leak_coefficient):
 def write_to_csv(iterations):
 
 	base_leak = LEAK_COEFF
-	f = open('training_data.csv', "w")
+	f = open('graphs/training_data_2leaks_1step.csv', "w")
 
 	header1 = ""
 	header2 = 'leakage_position ({}),'.format(l_unit)

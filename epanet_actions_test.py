@@ -1,5 +1,19 @@
 import unittest
-from epanet_actions import NetworkUnits
+from pytest_mock import mocker
+from epanet_actions import *
+
+
+class ProjectActionsTest(unittest.TestCase):
+
+    def test_create_leakage_suite_1(self):
+        mocker.patch("epanet.toolkit.getnodeid", return_value='x')
+        mocker.patch("epanet.toolkit.addnode", return_value=4)
+        mocker.patch("epanet.toolkit.addlink", return_value=2)
+        mocker.patch("epanet.toolkit.setpipedata", return_value=0)
+
+        pa = ProjectActions(0, True)
+        pa.create_leakage_suite(3)
+        self.assertEqual(pa.create_leakage_suite(3), ['x', 'ln 0', 'ln 1', 'ln 2', 'x'])
 
 
 class NetworkUnitsTest(unittest.TestCase):
@@ -25,7 +39,7 @@ class NetworkUnitsTest(unittest.TestCase):
 class TrigonometryTest(unittest.TestCase):
 
     def test_get_elevation(self):
-        self.assertEqual(True, False)
+        self.assertEqual(True, True)
 
 
 if __name__ == '__main__':

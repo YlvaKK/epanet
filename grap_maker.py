@@ -10,7 +10,7 @@ flow_differential = []
 
 def main():
     parser = argparse.ArgumentParser(description='Run an EPANET simulation.')
-    parser.add_argument('input_filename', nargs='?', default='training_data.csv', help='A csv file to graph.')
+    parser.add_argument('input_filename', nargs='?', default='training_data_2leaks_1step.csv', help='A csv file to graph.')
 
     args = parser.parse_args()
     input_file = args.input_filename

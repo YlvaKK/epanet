@@ -18,9 +18,8 @@ def main():
     project = epanet_actions.ProjectActions(ph, use_elev)
 
     project.initialize_subsys(args)
-
     project.add_leakage_suite()
-    results = project.move_leak_along_transect(leak_base=LEAK_COEFF, iterations=args.iter)
+    results = project.move_leaks_along_transect(leak_coeff=LEAK_COEFF)
     write_to_csv(results)
 
 
@@ -32,9 +31,11 @@ def parse():
     parser.add_argument('binary_filename', nargs='?', default='', help='Hydraulic analysis results file (binary).')
     parser.add_argument('--hstep', metavar='seconds', type=int, default=3600,
                         help='Hydraulic time step (default 3600s=1h).')
-    parser.add_argument('--pipe', metavar='index', type=int, default=2, help='index of pipe to look at (default 2).')
-    parser.add_argument('--iter', metavar='number of leakage sizes', type=int, default=1,
-                        help='number of leak size iterations (default 1)')
+    parser.add_argument('--pipe', metavar='unitless', type=int, default=2, help='index of pipe to look at (default 2).')
+    parser.add_argument('--lstep', metavar='length unit', type=int, default=1,
+                        help='Distance between leaks (default 1)')
+    parser.add_argument('--nleaks', metavar='unitless', type=int, default=1,
+                        help='Number of leaks (default 2)')
 
     args = parser.parse_args()
     return args
@@ -44,13 +45,6 @@ def write_to_csv(results):
     writer = CSVWriter(output_file)
     writer.write_lines(results)
     writer.close()
-
-
-# if this is used everything breaks. I am keeping it only as a cautionary tale. NEVER CALL THIS!
-"""def get_project():
-    epanet = dcritsim.epanetwrap.DcritEPANET()
-    ph = epanet.get_ph()
-    return epanet_actions.ProjectActions(ph)"""
 
 
 if __name__ == "__main__":
