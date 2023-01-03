@@ -50,27 +50,6 @@ class ProjectActions:
         toolkit.initH(self.ph, toolkit.NOSAVE)
         toolkit.solveH(self.ph)
 
-    """def add_leak(self):
-        log.debug('getting nodes surrounding pipe w/ index %s' % self.pipe_index)
-        self.upstream_node_index, self.downstream_node_index = toolkit.getlinknodes(self.ph, self.pipe_index)
-        log.debug('saving properties of original pipe')
-        self.orig_prop = LinkProperties(self.ph, self.pipe_index)
-
-        log.debug('initializing trigonometry tools with upstream node %s, downstream node %s and length %s' % (
-            self.upstream_node_index, self.downstream_node_index, self.orig_prop.length))
-        self.trig = TrigonometryTools(self.ph, self.upstream_node_index, self.downstream_node_index,
-                                      self.orig_prop.length)
-
-        log.debug('deleting original pipe and adding leakage node')
-        toolkit.deletelink(self.ph, self.pipe_index, actionCode=toolkit.UNCONDITIONAL)
-        self.leakage_node_index = toolkit.addnode(self.ph, LEAK_ID, nodeType=toolkit.JUNCTION)
-
-        self.upstream_pipe_index = self.make_pipe(UP_ID, toolkit.getnodeid(self.ph, self.upstream_node_index), LEAK_ID,
-                                                  self.orig_prop)
-        self.downstream_pipe_index = self.make_pipe(DOWN_ID, LEAK_ID,
-                                                    toolkit.getnodeid(self.ph, self.downstream_node_index),
-                                                    self.orig_prop)"""
-
     def add_leakage_suite(self):
         log.debug('getting nodes surrounding pipe w/ index %s' % self.pipe_index)
         self.upstream_node_index, self.downstream_node_index = toolkit.getlinknodes(self.ph, self.pipe_index)
@@ -157,7 +136,7 @@ class ProjectActions:
         for i in range(numresults):
             index = i+2
             results[index] = '{},'.format(i)
-            result_values = self.simulate_leaks(leak_coeff, self.distance, pipe_length, i+1)
+            result_values = self.simulate_leaks(leak_coeff, pipe_length, i+1)
             results[index] = results[index] + "{},{},{},{}".format(result_values.up_p, result_values.down_p,
                                                                    result_values.up_f, result_values.down_f)
 
@@ -180,18 +159,18 @@ class ProjectActions:
         return Results(self.ph, self.upstream_node_index, self.downstream_node_index, self.pipes[0],
                        self.pipes[-1])
 
-    def simulate_leaks(self, leak_coeff, distance, pipe_length, length_before_leaks):
-        length_after_leak = pipe_length - (length_before_leaks + (self.distance * (self.numleaks - 1)))
-        toolkit.setpipedata(self.ph, self.pipes[0], length=length_before_leaks, diam=self.orig_prop.diam,
+    def simulate_leaks(self, leak_coeff, pipe_length, length_to_node):
+        length_after_leak = pipe_length - (length_to_node + (self.distance * (self.numleaks - 1)))
+        toolkit.setpipedata(self.ph, self.pipes[0], length=length_to_node, diam=self.orig_prop.diam,
                             rough=self.orig_prop.rough, mloss=self.orig_prop.mloss)
         toolkit.setpipedata(self.ph, self.pipes[-1], length=length_after_leak, diam=self.orig_prop.diam,
                             rough=self.orig_prop.rough, mloss=self.orig_prop.mloss)
 
-        if self.use_elev:
-            leak_elev = self.trig.calculate_leak_elevation(length_before_leaks)
-            toolkit.setnodevalue(self.ph, self.nodes[0], toolkit.ELEVATION, leak_elev)
-
         for node in self.nodes:
+            if self.use_elev:
+                leak_elev = self.trig.calculate_leak_elevation(length_to_node)
+                toolkit.setnodevalue(self.ph, self.nodes[0], toolkit.ELEVATION, leak_elev)
+                length_to_node = length_to_node + self.distance
             toolkit.setnodevalue(self.ph, node, toolkit.EMITTER, leak_coeff)
 
         self.run_hydraulic_solver()
