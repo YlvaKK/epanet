@@ -20,7 +20,7 @@ def main():
     project.initialize_subsys(args)
 
     project.add_leakage_suite()
-    results = project.move_leak_along_transect(leak_base=LEAK_COEFF, iterations=args.iter)
+    results = project.move_one_leak_along_transect(leak_base=LEAK_COEFF, iterations=args.iter)
     write_to_csv(results)
 
 

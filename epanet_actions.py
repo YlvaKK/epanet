@@ -92,11 +92,11 @@ class ProjectActions:
                             mloss=properties.mloss)
         return pipe_index
 
-    def move_leak_along_transect(self, leak_base, iterations):
+    def move_one_leak_along_transect(self, leak_base, iterations):
         pipe_length = toolkit.getlinkvalue(self.ph, self.pipe_index, toolkit.LENGTH)
         results = [""] * round(pipe_length + 1)
 
-        results[0] = ""
+        results[0] = ","
         results[1] = 'leakage_position ({}),'.format(self.network_units.length)
         for i in range(iterations):
             results[0] = results[0] + 'leak_coeff: %s,,,' % (leak_base * (i + 1))
@@ -104,6 +104,7 @@ class ProjectActions:
                              1] + 'upstream_pressure ({0}),downstream_pressure ({0}),upstream_flow ({1}),' \
                                   'downstream_flow ({1})'.format(
                 self.network_units.pressure, self.network_units.flow)
+
             if i != iterations - 1:
                 results[0] = results[0] + ","
                 results[1] = results[1] + ","
@@ -114,7 +115,7 @@ class ProjectActions:
 
             for j in range(iterations):
                 leak_coeff = leak_base * (j + 1)
-                result_values = self.simulate_leak(leak_coeff, i, pipe_length - i)
+                result_values = self.simulate_leaks(leak_coeff, pipe_length, i)
                 results[index] = results[index] + "{},{},{},{}".format(result_values.up_p, result_values.down_p,
                                                                        result_values.up_f, result_values.down_f)
                 if j != iterations - 1:
@@ -122,7 +123,7 @@ class ProjectActions:
 
         return results
 
-    def move_leaks_along_transect(self, leak_coeff):
+    def move_several_leaks_along_transect(self, leak_coeff):
         pipe_length = toolkit.getlinkvalue(self.ph, self.pipe_index, toolkit.LENGTH)
         numresults = round(pipe_length) - (self.distance * (self.numleaks - 1) + 1)
         results = [""] * (numresults + 2)
@@ -141,23 +142,6 @@ class ProjectActions:
                                                                    result_values.up_f, result_values.down_f)
 
         return results
-
-    def simulate_leak(self, leak_coeff, length_before_leak, length_after_leak):
-        toolkit.setpipedata(self.ph, self.pipes[0], length=length_before_leak, diam=self.orig_prop.diam,
-                            rough=self.orig_prop.rough, mloss=self.orig_prop.mloss)
-        toolkit.setpipedata(self.ph, self.pipes[-1], length=length_after_leak, diam=self.orig_prop.diam,
-                            rough=self.orig_prop.rough, mloss=self.orig_prop.mloss)
-
-        if self.use_elev:
-            leak_elev = self.trig.calculate_leak_elevation(length_before_leak)
-            toolkit.setnodevalue(self.ph, self.nodes[0], toolkit.ELEVATION, leak_elev)
-
-        toolkit.setnodevalue(self.ph, self.nodes[0], toolkit.EMITTER, leak_coeff)
-
-        self.run_hydraulic_solver()
-
-        return Results(self.ph, self.upstream_node_index, self.downstream_node_index, self.pipes[0],
-                       self.pipes[-1])
 
     def simulate_leaks(self, leak_coeff, pipe_length, length_to_node):
         length_after_leak = pipe_length - (length_to_node + (self.distance * (self.numleaks - 1)))
