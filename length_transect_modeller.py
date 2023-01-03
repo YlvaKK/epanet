@@ -21,7 +21,6 @@ def main():
 
     project.add_leak()
     results = project.move_leak_along_transect(leak_base=LEAK_COEFF, iterations=args.iter)
-    project.close_hydraulic_solver()
     write_to_csv(results)
 
 
@@ -43,7 +42,7 @@ def parse():
 
 def write_to_csv(results):
     writer = CSVWriter(output_file)
-    writer.writeLines(results)
+    writer.write_lines(results)
     writer.close()
 
 

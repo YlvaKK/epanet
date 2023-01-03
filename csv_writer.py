@@ -1,9 +1,11 @@
 class CSVWriter:
+    f = None
+    filename = None
 
     def __init__(self, filename):
         self.filename = filename
 
-    def writeLines(self, lines):
+    def write_lines(self, lines):
         self.f = open(self.filename, "w")
 
         for line in lines:

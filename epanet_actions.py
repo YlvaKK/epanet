@@ -41,10 +41,6 @@ class ProjectActions:
         toolkit.initH(self.ph, toolkit.NOSAVE)
         toolkit.solveH(self.ph)
 
-    def close_hydraulic_solver(self):
-        toolkit.closeH(self.ph)
-        toolkit.close(self.ph)
-
     def add_leak(self):
         log.debug('getting nodes surrounding pipe w/ index %s' % self.pipe_index)
         self.upstream_node_index, self.downstream_node_index = toolkit.getlinknodes(self.ph, self.pipe_index)
@@ -53,9 +49,6 @@ class ProjectActions:
 
         log.debug('initializing trigonometry tools with upstream node %s, downstream node %s and length %s' % (
             self.upstream_node_index, self.downstream_node_index, self.orig_prop.length))
-        #upstream_e = toolkit.getnodevalue(self.ph, self.upstream_node_index, toolkit.ELEVATION)
-        #downstream_e = toolkit.getnodevalue(self.ph, self.downstream_node_index, toolkit.ELEVATION)
-        #self.trig = TrigonometryTools(upstream_e, downstream_e, self.orig_prop.length)
         self.trig = TrigonometryTools(self.ph, self.upstream_node_index, self.downstream_node_index,
                                       self.orig_prop.length)
 
@@ -69,8 +62,8 @@ class ProjectActions:
                                                     toolkit.getnodeid(self.ph, self.downstream_node_index),
                                                     self.orig_prop)
 
-    def make_pipe(self, id, start_node, end_node, properties):
-        pipe_index = toolkit.addlink(self.ph, id, toolkit.PIPE, start_node, end_node)
+    def make_pipe(self, pipe_id, start_node, end_node, properties):
+        pipe_index = toolkit.addlink(self.ph, pipe_id, toolkit.PIPE, start_node, end_node)
         toolkit.setpipedata(self.ph, pipe_index, length=1, diam=properties.diam, rough=properties.rough,
                             mloss=properties.mloss)
         return pipe_index
@@ -124,6 +117,9 @@ class ProjectActions:
 
 
 class TrigonometryTools:
+    upstream_node_elevation = None
+    angle = None
+
     def __init__(self, ph, upstream_node, downstream_node, pipe_length):
         upstream_node_elevation, downstream_node_elevation = self.get_elevation(ph, upstream_node, downstream_node)
         elevation_diff = upstream_node_elevation - downstream_node_elevation
@@ -155,6 +151,8 @@ class NetworkUnits:
             self.flow = 'lps'
             self.pressure = 'm of head'
             self.length = 'm'
+        else:
+            raise IndexError
 
 
 class LinkProperties:
