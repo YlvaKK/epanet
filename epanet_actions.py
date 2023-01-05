@@ -18,7 +18,7 @@ class ProjectActions:
 
         self.trig = None
         self.orig_prop = None
-        self.downstream_node_index = None
+        self.downstreinam_node_index = None
         self.upstream_node_index = None
         self.pipe_index = None
         self.network_units = None
@@ -64,25 +64,23 @@ class ProjectActions:
         log.debug('deleting original pipe')
         toolkit.deletelink(self.ph, self.pipe_index, actionCode=toolkit.UNCONDITIONAL)
 
-        self.nodes, self.pipes = self.create_leakage_suite()
+        self.create_leakage_suite()
 
     def create_leakage_suite(self):
-        nodes = [0] * self.numleaks
+        self.nodes = [0] * self.numleaks
         node_ids = [''] * (self.numleaks + 2)
-        pipes = [0] * (self.numleaks + 1)
+        self.pipes = [0] * (self.numleaks + 1)
 
         node_ids[0] = toolkit.getnodeid(self.ph, self.upstream_node_index)
         node_ids[-1] = toolkit.getnodeid(self.ph, self.downstream_node_index)
 
         for i in range(self.numleaks):
             node_id = "ln_%s" % i
-            nodes[i] = toolkit.addnode(self.ph, node_id, nodeType=toolkit.JUNCTION)
+            self.nodes[i] = toolkit.addnode(self.ph, node_id, nodeType=toolkit.JUNCTION)
             node_ids[i+1] = node_id
 
         for i in range(self.numleaks + 1):
-            pipes[i] = self.make_pipe("pipe_%s" % i, node_ids[i], node_ids[i+1], self.orig_prop, self.distance)
-
-        return nodes, pipes
+            self.pipes[i] = self.make_pipe("pipe_%s" % i, node_ids[i], node_ids[i+1], self.orig_prop, self.distance)
 
     def make_pipe(self, pipe_id, start_node, end_node, properties, std_length):
         if std_length < 1:
@@ -152,7 +150,7 @@ class ProjectActions:
 
         for node in self.nodes:
             if self.use_elev:
-                leak_elev = self.trig.calculate_leak_elevation(length_to_node)
+                leak_elev = self.trig.calculate_node_elevation(length_to_node)
                 toolkit.setnodevalue(self.ph, self.nodes[0], toolkit.ELEVATION, leak_elev)
                 length_to_node = length_to_node + self.distance
             toolkit.setnodevalue(self.ph, node, toolkit.EMITTER, leak_coeff)
@@ -168,18 +166,14 @@ class TrigonometryTools:
     angle = None
 
     def __init__(self, ph, upstream_node, downstream_node, pipe_length):
-        upstream_node_elevation, downstream_node_elevation = self.get_elevation(ph, upstream_node, downstream_node)
+        upstream_node_elevation = toolkit.getnodevalue(ph, upstream_node, toolkit.ELEVATION)
+        downstream_node_elevation = toolkit.getnodevalue(ph, downstream_node, toolkit.ELEVATION)
         elevation_diff = upstream_node_elevation - downstream_node_elevation
 
         self.upstream_node_elevation = upstream_node_elevation
         self.angle = math.asin(elevation_diff / pipe_length)
 
-    def get_elevation(self, ph, upstream_node, downstream_node):
-        upstream_elev = toolkit.getnodevalue(ph, upstream_node, toolkit.ELEVATION)
-        downstream_elev = toolkit.getnodevalue(ph, downstream_node, toolkit.ELEVATION)
-        return upstream_elev, downstream_elev
-
-    def calculate_leak_elevation(self, length_from_upper):
+    def calculate_node_elevation(self, length_from_upper):
         elevation_diff_from_upper_elevation = math.sin(self.angle) * length_from_upper
         return self.upstream_node_elevation - elevation_diff_from_upper_elevation
 
