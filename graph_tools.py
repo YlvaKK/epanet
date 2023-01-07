@@ -1,24 +1,8 @@
 import csv
-from matplotlib import pyplot
-import argparse
-import sys
 
 upstream_pressure_deviation_from_mean = []
 downstream_pressure_deviation_from_mean = []
 flow_differential = []
-
-
-def main():
-    parser = argparse.ArgumentParser(description='Run an EPANET simulation.')
-    parser.add_argument('input_filename', nargs='?', default='training_data_2leaks_1step.csv', help='A csv file to graph.')
-
-    args = parser.parse_args()
-    input_file = args.input_filename
-
-    reader = CSVReader(input_file)
-    reader.read()
-    reader.data.derive_calculations()
-    make_plots(reader.data)
 
 
 class CSVReader:
@@ -27,11 +11,13 @@ class CSVReader:
 
     def __init__(self, input_file):
         self.input_file = input_file
-        self.data = Data()
 
-    def read(self):
+    def read_single(self):
         input_list = self.get_input()
-        self.get_totals(input_list)
+        self.data = Data()
+        for i in range(2, len(input_list)):
+            self.data.add_line(float(input_list[i][1]), float(input_list[i][2]),
+                               float(input_list[i][3]), float(input_list[i][4]))
 
     def get_input(self):
         input_list = []
@@ -41,10 +27,20 @@ class CSVReader:
                 input_list.append(row)
         return input_list
 
-    def get_totals(self, input_list):
-        for i in range(2, len(input_list)):
-            self.data.add_line(float(input_list[i][1]), float(input_list[i][2]),
-                               float(input_list[i][3]), float(input_list[i][4]))
+    def read_multiple(self):
+        input_list = self.get_input()
+
+        columns = len(input_list[2])
+        multiples = columns // 4
+        self.data = []
+
+        for i in range(multiples):
+            data = Data()
+
+            for j in range(2, len(input_list)):
+                data.add_line(float(input_list[j][1 + i*4]), float(input_list[j][2 + i*4]),
+                              float(input_list[j][3 + i*4]), float(input_list[j][4 + i*4]))
+            self.data.append(data)
 
 
 class Data:
@@ -70,6 +66,7 @@ class Data:
         self.upstream_pressure_deviation_from_mean = []
         self.downstream_pressure_deviation_from_mean = []
         self.flow_differential = []
+        self.pressure_differential = []
 
     def add_line(self, up_p, down_p, up_f, down_f):
         self.upstream_pressure.append(up_p)
@@ -89,37 +86,9 @@ class Data:
         return self.downstream_total / self.length
 
     def derive_calculations(self):
-        print('appending the stuff')
         for i in range(self.length):
             self.upstream_pressure_deviation_from_mean.append(abs(self.upstream_mean() - self.upstream_pressure[i]))
             self.downstream_pressure_deviation_from_mean.append(
                 abs(self.downstream_mean() - self.downstream_pressure[i]))
             self.flow_differential.append(self.upstream_flow[i] - self.downstream_flow[i])
-
-
-def make_plots(data):
-    x = range(data.length)
-    print('x len={}, y={}'.format(data.length, len(data.upstream_pressure_deviation_from_mean)))
-
-    """pyplot.scatter(x, upstream_pressure, s=2, c='xkcd:puke green')
-    pyplot.scatter(x, downstream_pressure, s=2, c='xkcd:orange')
-    pyplot.xlabel('leakage distance from start of pipe (feet)')
-    pyplot.ylabel('pressure (psi)')
-    pyplot.legend(['pressure in upsteam node', 'pressure in downstream node'])
-    pyplot.show()"""
-
-    pyplot.scatter(x, data.upstream_pressure_deviation_from_mean, s=2, c='xkcd:puke green')
-    pyplot.scatter(x, data.downstream_pressure_deviation_from_mean, s=2, c='xkcd:orange')
-    pyplot.xlabel('leakage position from start (feet)')
-    pyplot.ylabel('pressure (psi), derivation from mean')
-    pyplot.legend(['upstream node', 'downstream node'])
-    pyplot.show()
-
-    pyplot.scatter(x, data.flow_differential, s=2, c='xkcd:puke green')
-    pyplot.xlabel('leakage position (feet)')
-    pyplot.ylabel('difference in flow before/after leak (gpm)')
-    pyplot.show()
-
-
-if __name__ == "__main__":
-    sys.exit(main())
+            self.pressure_differential.append(self.upstream_pressure[i] - self.downstream_pressure[i])
