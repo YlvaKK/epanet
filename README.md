@@ -34,12 +34,18 @@ You can run this code via one of two scripts. `length_transect_modellers.py` let
 
 Both scripts can be run without input arguments, or with all arguments. A run could look something like the following:
 
-````python3 length_transect_modeller.py examplenet.inp report.txt binary.bin --hstep 7200 --pipe 3 --iter 5````
-````python3 multiple_leaks_modeller.py otherexamplenet.inp report.txt binary.bin --hstep 1800 --pipe 1 --lstep 5 --nleaks 3````
+```
+python3 length_transect_modeller.py examplenet.inp report.txt binary.bin --hstep 7200 --pipe 3 --iter 5
+```
+```
+python3 multiple_leaks_modeller.py otherexamplenet.inp report.txt binary.bin --hstep 1800 --pipe 1 --lstep 5 --nleaks 3
+```
 
 or just:
 
-````python3 length_transect_modeller.py````
+```
+python3 length_transect_modeller.py
+```
 
 Good luck!
 
