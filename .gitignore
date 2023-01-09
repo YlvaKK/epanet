@@ -5,4 +5,4 @@ epanet-python/*
 old_version/*
 __pycache__/*
 .idea/*
-graphs/*
+example_outputs/old/*
