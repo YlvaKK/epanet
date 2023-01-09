@@ -1,6 +1,6 @@
 import sys
 import argparse
-import dcritsim
+from epanet import toolkit as et
 import epanet_actions
 from csv_writer import CSVWriter
 
@@ -12,9 +12,7 @@ use_elev = True
 def main():
     args = parse()
 
-    # do NOT under any circumstances try to move these three lines to a function. everything breaks.
-    epanet = dcritsim.epanetwrap.DcritEPANET()
-    ph = epanet.get_ph()
+    ph = et.createproject()
     project = epanet_actions.ProjectActions(ph, use_elev)
 
     project.initialize_subsys(args)
@@ -44,13 +42,6 @@ def write_to_csv(results):
     writer = CSVWriter(output_file)
     writer.write_lines(results)
     writer.close()
-
-
-# if this is used everything breaks. I am keeping it only as a cautionary tale. NEVER CALL THIS!
-"""def get_project():
-    epanet = dcritsim.epanetwrap.DcritEPANET()
-    ph = epanet.get_ph()
-    return epanet_actions.ProjectActions(ph)"""
 
 
 if __name__ == "__main__":

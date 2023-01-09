@@ -1,20 +1,18 @@
 import sys
 import argparse
-import dcritsim
+from epanet import toolkit as et
 import epanet_actions
 from csv_writer import CSVWriter
 
 output_file = 'training_data.csv'
-LEAK_COEFF = 0.25
+LEAK_COEFF = 0.1
 use_elev = True
 
 
 def main():
     args = parse()
 
-    # do NOT under any circumstances try to move these three lines to a function. everything breaks.
-    epanet = dcritsim.epanetwrap.DcritEPANET()
-    ph = epanet.get_ph()
+    ph = et.createproject()
     project = epanet_actions.ProjectActions(ph, use_elev)
 
     project.initialize_subsys(args)
@@ -34,7 +32,7 @@ def parse():
     parser.add_argument('--pipe', metavar='unitless', type=int, default=2, help='index of pipe to look at (default 2).')
     parser.add_argument('--lstep', metavar='length unit', type=int, default=1,
                         help='Distance between leaks (default 1)')
-    parser.add_argument('--nleaks', metavar='unitless', type=int, default=1,
+    parser.add_argument('--nleaks', metavar='unitless', type=int, default=2,
                         help='Number of leaks (default 2)')
 
     args = parser.parse_args()
