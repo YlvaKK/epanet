@@ -5,7 +5,7 @@ import epanet_actions
 from csv_writer import CSVWriter
 
 output_file = 'training_data.csv'
-LEAK_COEFF = 0.1
+LEAK_COEFF = 0.25
 use_elev = True
 
 

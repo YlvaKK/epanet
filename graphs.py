@@ -7,16 +7,22 @@ colours = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 
 
 
 def main():
-    with_elevation = get_multiple_data('example_outputs/5jan/training_data_05_with_elev.csv')
-    without_elevation = get_multiple_data('example_outputs/5jan/training_data_05_without_elev.csv')
-    two_leaks_1_foot = get_multiple_data('example_outputs/5jan/training_data_025_2leaks_with_elevation.csv')
-    two_leaks_10_feet = get_multiple_data('example_outputs/5jan/training_data_025_2leaks_10step_with_elev.csv')
-    ten_sizes = get_multiple_data('example_outputs/5jan/training_data_ten_sizes.csv')
+    with_elevation = get_multiple_data('example_outputs/training_data_05_with_elev.csv')
+    without_elevation = get_multiple_data('example_outputs/training_data_05_without_elev.csv')
+    two_leaks_1_foot = get_multiple_data('example_outputs/training_data_025_2leaks_with_elevation.csv')
+    two_leaks_10_feet = get_multiple_data('example_outputs/training_data_025_2leaks_10step_with_elev.csv')
+    two_leaks_100_feet = get_multiple_data('example_outputs/training_data_025_2leaks_100feet.csv')
+    ten_sizes = get_multiple_data('example_outputs/training_data_ten_sizes.csv')
+    old_without = get_multiple_data('example_outputs/training_data_old_wo_elev.csv')
+    old_with = get_multiple_data('example_outputs/training_data_old_w_elev.csv')
+
 
     with_and_without_elevation(with_elevation, without_elevation)
-    one_or_two_leaks(with_elevation, two_leaks_1_foot)
-    long_or_short_distance(two_leaks_1_foot, two_leaks_10_feet)
-    many_sizes(ten_sizes)
+    #one_or_two_leaks(with_elevation, two_leaks_1_foot)
+    #long_or_short_distance(two_leaks_1_foot, two_leaks_10_feet)
+    #many_sizes(ten_sizes)
+    #long_or_short_distance(two_leaks_1_foot, two_leaks_100_feet)
+    with_and_without_elevation(old_with, old_without)
 
 
 def get_single_data(filename):
