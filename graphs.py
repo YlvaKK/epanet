@@ -7,32 +7,21 @@ colours = ['blue', 'orange', 'green', 'red', 'purple', 'brown', 'pink', 'gray', 
 
 
 def main():
-    with_elevation = get_multiple_data('example_outputs/training_data_05_with_elev.csv')
-    without_elevation = get_multiple_data('example_outputs/training_data_05_without_elev.csv')
-    two_leaks_1_foot = get_multiple_data('example_outputs/training_data_025_2leaks_with_elevation.csv')
-    two_leaks_10_feet = get_multiple_data('example_outputs/training_data_025_2leaks_10step_with_elev.csv')
-    two_leaks_100_feet = get_multiple_data('example_outputs/training_data_025_2leaks_100feet.csv')
-    ten_sizes = get_multiple_data('example_outputs/training_data_ten_sizes.csv')
-    old_without = get_multiple_data('example_outputs/training_data_old_wo_elev.csv')
-    old_with = get_multiple_data('example_outputs/training_data_old_w_elev.csv')
-
+    with_elevation = get_data('example_outputs/training_data_05_with_elev.csv')
+    without_elevation = get_data('example_outputs/training_data_05_without_elev.csv')
+    two_leaks_1_foot = get_data('example_outputs/training_data_025_2leaks_with_elevation.csv')
+    two_leaks_10_feet = get_data('example_outputs/training_data_025_2leaks_10step_with_elev.csv')
+    two_leaks_100_feet = get_data('example_outputs/training_data_025_2leaks_100feet.csv')
+    two_leaks_1000_feet = get_data('example_outputs/training_data_025_2leaks_1000.csv')
+    ten_sizes = get_data('example_outputs/training_data_ten_sizes.csv')
 
     with_and_without_elevation(with_elevation, without_elevation)
-    #one_or_two_leaks(with_elevation, two_leaks_1_foot)
-    #long_or_short_distance(two_leaks_1_foot, two_leaks_10_feet)
-    #many_sizes(ten_sizes)
-    #long_or_short_distance(two_leaks_1_foot, two_leaks_100_feet)
-    with_and_without_elevation(old_with, old_without)
+    one_or_two_leaks(with_elevation, two_leaks_1_foot)
+    long_or_short_distance(two_leaks_1_foot, two_leaks_10_feet, two_leaks_100_feet, two_leaks_1000_feet)
+    many_sizes(ten_sizes)
 
 
-def get_single_data(filename):
-    read = CSVReader(filename)
-    read.read_single()
-    data = read.data
-    return data.derive_calculations()
-
-
-def get_multiple_data(filename):
+def get_data(filename):
     read = CSVReader(filename)
     read.read_multiple()
     datasets = read.data
@@ -44,7 +33,7 @@ def get_multiple_data(filename):
 
 
 def with_and_without_elevation(data1, data2):
-    make_plot([range(data1[0].length), range(data1[0].length), range(data2[0].length), range(data2[0].length)],
+    make_plot([data1[0].location, data1[0].location, data2[0].location, data2[0].location],
               [data1[0].upstream_pressure_deviation_from_mean, data1[0].downstream_pressure_deviation_from_mean,
                data2[0].upstream_pressure_deviation_from_mean, data2[0].downstream_pressure_deviation_from_mean],
               'Leakage position from start of pipe (feet)',
@@ -52,58 +41,53 @@ def with_and_without_elevation(data1, data2):
               ['With elevation, upstream node', 'With elevation, downstream node',
                'Without elevation, upstream node', 'Without elevation, downstream node'])
 
-    make_plot([range(data1[0].length), range(data2[0].length)],
+    make_plot([data1[0].location, data2[0].location],
               [data1[0].pressure_differential, data2[0].pressure_differential],
               'Leakage position from start of pipe (feet)',
               'Difference in pressure before/after leak (psi)',
               ['With elevation', 'Without elevation'])
 
-    make_plot([range(data2[0].length)] * 2,
+    make_plot([data1[0].location, data2[0].location],
               [data1[0].flow_differential, data2[0].flow_differential],
               'Leakage position from start of pipe (feet)',
               'Difference in flow before/after leak (gpm)', ['with elevation', 'without elevation'], '')
 
 
 def one_or_two_leaks(data1, data2):
-    make_plot([range(data1[0].length), range(data1[0].length), range(data2[0].length), range(data2[0].length)],
+    make_plot([data1[0].location, data1[0].location, data2[0].location, data2[0].location],
               [data1[0].upstream_pressure_deviation_from_mean, data1[0].downstream_pressure_deviation_from_mean,
                data2[0].upstream_pressure_deviation_from_mean, data2[0].downstream_pressure_deviation_from_mean],
               'Leakage position from start of pipe (feet)',
               'Pressure (psi), derivation from mean',
               ['one leak, upstream', 'one leak, downstream', 'two leaks, upstream', 'two leaks, downstream'])
 
-    make_plot([range(data1[0].length), range(data2[0].length)],
+    make_plot([data1[0].location, data2[0].location],
               [data1[0].pressure_differential, data2[0].pressure_differential],
               'Leakage position from start of pipe (feet)',
               'Difference in pressure before/after leak (psi)',
               ['One leak (leak coefficient 0.5)', 'Two leaks (leak coefficient 0.25)'])
 
-    make_plot([range(data1[0].length), range(data2[0].length)],
+    make_plot([data1[0].location, data2[0].location],
               [data1[0].flow_differential, data2[0].flow_differential],
               'Leakage position from start of pipe (feet)',
               'Difference in flow before/after leak (gpm)',
               ['One leak (leak coefficient 0.5)', 'Two leaks (leak coefficient 0.25)'])
 
 
-def long_or_short_distance(data1, data2):
-    make_plot([range(data1[0].length), range(data1[0].length), range(data2[0].length), range(data2[0].length)],
-              [data1[0].upstream_pressure_deviation_from_mean, data1[0].downstream_pressure_deviation_from_mean,
-               data2[0].upstream_pressure_deviation_from_mean, data2[0].downstream_pressure_deviation_from_mean],
-              'Leakage position from start of pipe (feet)',
-              'Pressure (psi), derivation from mean',
-              ['1 foot, upstream', '1 foot, downstream', '10 feet, upstream', '10 feet, downstream'])
-
-    make_plot([range(data1[0].length), range(data2[0].length)],
-              [data1[0].pressure_differential, data2[0].pressure_differential],
+def long_or_short_distance(data1, data2, data3, data4):
+    make_plot([data1[0].location, data2[0].location, data3[0].location, data4[0].location],
+              [data1[0].pressure_differential, data2[0].pressure_differential,
+               data3[0].pressure_differential, data4[0].pressure_differential],
               'Leakage position from start of pipe (feet)',
               'Difference in pressure before/after leak (psi)',
-              ['1 foot', '10 feet'])
+              ['1 foot', '10 feet', '100 feet', '1000 feet'])
 
-    make_plot([range(data1[0].length), range(data2[0].length)],
-              [data1[0].flow_differential, data2[0].flow_differential],
+    make_plot([data1[0].location, data2[0].location, data3[0].location, data4[0].location],
+              [data1[0].flow_differential, data2[0].flow_differential,
+               data3[0].flow_differential, data4[0].flow_differential],
               'Leakage position from start of pipe (feet)',
               'Difference in flow before/after leak (gpm)',
-              ['1 foot', '10 feet'])
+              ['1 foot', '10 feet', '100 feet', '1000 feet'])
 
 
 def many_sizes(data):

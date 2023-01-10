@@ -12,13 +12,6 @@ class CSVReader:
     def __init__(self, input_file):
         self.input_file = input_file
 
-    def read_single(self):
-        input_list = self.get_input()
-        self.data = Data()
-        for i in range(2, len(input_list)):
-            self.data.add_line(float(input_list[i][1]), float(input_list[i][2]),
-                               float(input_list[i][3]), float(input_list[i][4]))
-
     def get_input(self):
         input_list = []
         with open(self.input_file, 'r') as csvfile:
@@ -38,8 +31,9 @@ class CSVReader:
             data = Data()
 
             for j in range(2, len(input_list)):
+                data.clear_location
                 data.add_line(float(input_list[j][1 + i*4]), float(input_list[j][2 + i*4]),
-                              float(input_list[j][3 + i*4]), float(input_list[j][4 + i*4]))
+                              float(input_list[j][3 + i*4]), float(input_list[j][4 + i*4]), float(input_list[j][0]))
             self.data.append(data)
 
 
@@ -56,28 +50,35 @@ class Data:
     flow_differential = None
 
     def __init__(self):
+        self.location = []
         self.upstream_pressure = []
         self.downstream_pressure = []
         self.upstream_flow = []
         self.downstream_flow = []
+
         self.upstream_total = 0
         self.downstream_total = 0
         self.length = 0
+
         self.upstream_pressure_deviation_from_mean = []
         self.downstream_pressure_deviation_from_mean = []
         self.flow_differential = []
         self.pressure_differential = []
 
-    def add_line(self, up_p, down_p, up_f, down_f):
+    def add_line(self, up_p, down_p, up_f, down_f, location):
         self.upstream_pressure.append(up_p)
         self.downstream_pressure.append(down_p)
         self.upstream_flow.append(up_f)
         self.downstream_flow.append(down_f)
+        self.location.append(location)
 
         self.upstream_total = self.upstream_total + up_p
         self.downstream_total = self.downstream_total + down_p
 
         self.length += 1
+
+    def clear_location(self):
+        self.location.clear()
 
     def upstream_mean(self):
         return self.upstream_total / self.length

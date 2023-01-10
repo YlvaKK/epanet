@@ -77,10 +77,10 @@ class ProjectActions:
         for i in range(self.numleaks):
             node_id = "ln_%s" % i
             self.nodes[i] = toolkit.addnode(self.ph, node_id, nodeType=toolkit.JUNCTION)
-            node_ids[i+1] = node_id
+            node_ids[i + 1] = node_id
 
         for i in range(self.numleaks + 1):
-            self.pipes[i] = self.make_pipe("pipe_%s" % i, node_ids[i], node_ids[i+1], self.orig_prop, self.distance)
+            self.pipes[i] = self.make_pipe("pipe_%s" % i, node_ids[i], node_ids[i + 1], self.orig_prop, self.distance)
 
     def make_pipe(self, pipe_id, start_node, end_node, properties, std_length):
         if std_length < 1:
@@ -94,6 +94,7 @@ class ProjectActions:
         pipe_length = toolkit.getlinkvalue(self.ph, self.pipe_index, toolkit.LENGTH)
         results = [""] * round(pipe_length + 1)
 
+        # handles writing the two header rows
         results[0] = ","
         results[1] = 'leakage_position ({}),'.format(self.network_units.length)
         for i in range(iterations):
@@ -107,6 +108,7 @@ class ProjectActions:
                 results[0] = results[0] + ","
                 results[1] = results[1] + ","
 
+        # writes the results
         for i in range(1, round(pipe_length)):
             index = i + 1  # leaves room for two headers at the top of results
             results[index] = "{},".format(i)
@@ -126,23 +128,25 @@ class ProjectActions:
         numresults = round(pipe_length) - (self.distance * (self.numleaks - 1) + 1)
         results = [""] * (numresults + 2)
 
-        results[0] = 'distance_between_leaks: {0} {1}, number_of_leaks: {2}'\
+        results[0] = 'distance_between_leaks: {0} {1}, number_of_leaks: {2}' \
             .format(self.distance, self.network_units.length, self.numleaks)
         results[1] = 'first_leak_position({0}),upstream_pressure ({1}),downstream_pressure ({1}),' \
-                     'upstream_flow ({2}),downstream_flow ({2})'\
+                     'upstream_flow ({2}),downstream_flow ({2})' \
             .format(self.network_units.length, self.network_units.pressure, self.network_units.flow)
 
         for i in range(numresults):
-            index = i+2
-            results[index] = '{},'.format(i)
-            result_values = self.simulate_leaks(leak_coeff, pipe_length, i+1)
+            index = i + 2
+            result_values = self.simulate_leaks(leak_coeff, pipe_length, i + 1)
+            results[index] = '{},'.format(result_values.location)
             results[index] = results[index] + "{},{},{},{}".format(result_values.up_p, result_values.down_p,
                                                                    result_values.up_f, result_values.down_f)
 
         return results
 
     def simulate_leaks(self, leak_coeff, pipe_length, length_to_node):
-        length_after_leak = pipe_length - (length_to_node + (self.distance * (self.numleaks - 1)))
+        length_of_suite = self.distance * (self.numleaks - 1)
+        length_to_middle = length_to_node + (length_of_suite / 2)
+        length_after_leak = pipe_length - (length_to_node + length_of_suite)
         toolkit.setpipedata(self.ph, self.pipes[0], length=length_to_node, diam=self.orig_prop.diam,
                             rough=self.orig_prop.rough, mloss=self.orig_prop.mloss)
         toolkit.setpipedata(self.ph, self.pipes[-1], length=length_after_leak, diam=self.orig_prop.diam,
@@ -158,7 +162,7 @@ class ProjectActions:
         self.run_hydraulic_solver()
 
         return Results(self.ph, self.upstream_node_index, self.downstream_node_index, self.pipes[0],
-                       self.pipes[-1])
+                       self.pipes[-1], length_to_middle)
 
 
 class TrigonometryTools:
@@ -205,8 +209,9 @@ class LinkProperties:
 
 
 class Results:
-    def __init__(self, ph, up_node_index, down_node_index, up_link_index, down_link_index):
+    def __init__(self, ph, up_node_index, down_node_index, up_link_index, down_link_index, location):
         self.up_p = toolkit.getnodevalue(ph, up_node_index, toolkit.PRESSURE)
         self.down_p = toolkit.getnodevalue(ph, down_node_index, toolkit.PRESSURE)
         self.up_f = toolkit.getlinkvalue(ph, up_link_index, toolkit.FLOW)
         self.down_f = toolkit.getlinkvalue(ph, down_link_index, toolkit.FLOW)
+        self.location = location
