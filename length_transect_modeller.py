@@ -12,9 +12,12 @@ use_elev = True
 def main():
     args = parse()
 
+    # this bit creates the project, but can certainly be improved
+    # and moved partially to epanet_actions
     ph = et.createproject()
     project = epanet_actions.ProjectActions(ph, use_elev)
 
+    # could probably be called in project.__init__ instead
     project.initialize_subsys(args)
 
     project.add_leakage_suite()
@@ -22,6 +25,7 @@ def main():
     write_to_csv(results)
 
 
+# parses all input arguments, all have defaults except the reports
 def parse():
     parser = argparse.ArgumentParser(description='Run an EPANET simulation.')
     parser.add_argument('input_filename', nargs='?', default='net1.inp',

@@ -1,3 +1,4 @@
+# very simple class to streamline output writing
 class CSVWriter:
     f = None
     filename = None
